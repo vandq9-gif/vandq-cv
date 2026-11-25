@@ -4,6 +4,7 @@ const PROFILE = {
   short: "Văn Đinh",
   title: "Trợ lý Giám đốc · 9 năm trong ngành sản xuất",
   phone: "0777001183",
+  zalo: "0777001183",
   email: "vandq9@gmail.com",
   area: "Hải Phòng",
   photo: "images/anh-trang-chu.jpg",

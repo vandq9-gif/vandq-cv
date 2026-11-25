@@ -12,6 +12,8 @@
   const videos = typeof VIDEOS !== "undefined" ? VIDEOS : [];
   const fmtDate = d => { const [y, m, dd] = d.split("-"); return `${dd}/${m}/${y}`; };
   const initials = "VĐ";
+  const zaloUrl = P.zalo ? "https://zalo.me/" + P.zalo : "";
+  const fmtPhone = x => String(x).replace(/(\d{4})(\d{3})(\d{3})/, "$1 $2 $3");
 
   /* ---------- Header ---------- */
   const NAV = [
@@ -23,7 +25,7 @@
   if (header) {
     header.className = "site-header";
     header.innerHTML = `<div class="container nav">
-      <a class="brand" href="${root}index.html">${P.logo ? `<img class="brand-mark" src="${root}${P.logo}" alt="">` : '<span class="brand-mark">VĐ</span>'}<span>${esc(P.name || "Đinh Quý Văn")}<small>Câu chuyện công nghiệp tư bản</small></span></a>
+      <a class="brand" href="${root}index.html">${P.logo ? `<img class="brand-mark" src="${root}${P.logo}" alt="VĐ" onerror="this.outerHTML='<span class=&quot;brand-mark&quot;>VĐ</span>'">` : '<span class="brand-mark">VĐ</span>'}<span>${esc(P.name || "Đinh Quý Văn")}<small>Quản lý sản xuất · Kỷ luật · Học tập</small></span></a>
       <button class="menu-toggle" type="button" aria-label="Mở menu" aria-expanded="false">☰</button>
       <ul class="menu">${NAV.map(([k, h, t]) => `<li><a href="${root}${h}"${k === activeKey ? ' class="active" aria-current="page"' : ""}>${t}</a></li>`).join("")}</ul>
       <a class="btn btn-dark btn-sm nav-cta" href="${root}lien-he.html">Kết nối</a>
@@ -39,11 +41,12 @@
   if (footer) {
     footer.className = "site-footer";
     footer.innerHTML = `<div class="container foot">
-      <div><a class="brand" href="${root}index.html">${P.logo ? `<img class="brand-mark" src="${root}${P.logo}" alt="">` : '<span class="brand-mark">VĐ</span>'}<span>${esc(P.name)}<small>${esc(P.title || "")}</small></span></a>
+      <div><a class="brand" href="${root}index.html">${P.logo ? `<img class="brand-mark" src="${root}${P.logo}" alt="VĐ" onerror="this.outerHTML='<span class=&quot;brand-mark&quot;>VĐ</span>'">` : '<span class="brand-mark">VĐ</span>'}<span>${esc(P.name)}<small>${esc(P.title || "")}</small></span></a>
         <p style="margin-top:14px">${esc(P.motto || "")}</p></div>
       <div><h4>Trang</h4><ul>${NAV.map(([, h, t]) => `<li><a href="${root}${h}">${t}</a></li>`).join("")}</ul></div>
       <div><h4>Kết nối</h4><ul>
         ${P.phone ? `<li><a href="tel:${esc(P.phone)}">📞 ${esc(P.phone.replace(/(\d{4})(\d{3})(\d{3})/, "$1 $2 $3"))}</a></li>` : ""}
+        ${zaloUrl ? `<li><a href="${zaloUrl}" target="_blank" rel="noopener">💬 Zalo ${fmtPhone(P.zalo)}</a></li>` : ""}
         ${P.email ? `<li><a href="mailto:${esc(P.email)}">✉️ ${esc(P.email)}</a></li>` : ""}
         ${S.facebookPage ? `<li><a href="${S.facebookPage}" target="_blank" rel="noopener">Facebook</a></li>` : ""}
         ${S.tiktok ? `<li><a href="${S.tiktok}" target="_blank" rel="noopener">TikTok @vandq96</a></li>` : ""}
@@ -155,7 +158,7 @@
     f.addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; cur = b.dataset.t; $$(".chip", f).forEach(x => x.classList.toggle("active", x === b)); render(); });
     render();
     const st = S.tiktokStats || {};
-    $("#tt-box").innerHTML = `<h3><span class="dot-tt">♪</span>TikTok @vandq96</h3><p>Kênh “Câu chuyện công nghiệp tư bản”.</p>
+    $("#tt-box").innerHTML = `<h3><span class="dot-tt">♪</span>TikTok @vandq96</h3><p>Video ngắn về kinh nghiệm làm việc, học tập và chạy bộ.</p>
       <div class="stat-row"><div><b>${st.followers || ""}</b><span>người theo dõi</span></div><div><b>${st.likes || ""}</b><span>lượt thích</span></div><div><b>${st.topViews || ""}</b><span>video xem nhiều nhất</span></div></div>
       <blockquote class="tiktok-embed" cite="${S.tiktok}" data-unique-id="vandq96" data-embed-type="creator" style="max-width:780px;min-width:288px"><section><a target="_blank" href="${S.tiktok}">@vandq96</a></section></blockquote>`;
     $("#fb-box").innerHTML = `<h3><span class="dot-fb">f</span>Trang Facebook</h3><p>Bài viết mới nhất từ trang của tôi.</p>
@@ -177,7 +180,8 @@
   /* ---------- Liên hệ ---------- */
   if (page === "contact") {
     const items = [
-      P.phone && ["📞", "Điện thoại / Zalo", `<a href="tel:${P.phone}">${P.phone.replace(/(\d{4})(\d{3})(\d{3})/, "$1 $2 $3")}</a>`],
+      P.phone && ["📞", "Điện thoại", `<a href="tel:${P.phone}">${P.phone.replace(/(\d{4})(\d{3})(\d{3})/, "$1 $2 $3")}</a>`],
+      zaloUrl && ["💬", "Zalo", `<a href="${zaloUrl}" target="_blank" rel="noopener">${fmtPhone(P.zalo)} – nhắn tin ngay</a>`],
       P.email && ["✉️", "Email", `<a href="mailto:${P.email}">${P.email}</a>`],
       ["📍", "Khu vực", esc(P.area || "Hải Phòng")],
       S.facebookPage && ["f", "Facebook", `<a href="${S.facebookPage}" target="_blank" rel="noopener">facebook.com/vandq96</a>`],
@@ -185,7 +189,7 @@
     ].filter(Boolean);
     $("#contact-list").innerHTML = items.map(([i, k, v]) => `<li><span class="ico">${i}</span><div><b>${k}</b>${v}</div></li>`).join("");
     const form = $("#contact-form");
-    const zalo = $("#zalo-btn"); if (zalo && P.phone) zalo.href = "https://zalo.me/" + P.phone; else if (zalo) zalo.remove();
+    const zalo = $("#zalo-btn"); if (zalo && zaloUrl) zalo.href = zaloUrl; else if (zalo) zalo.remove();
     form.addEventListener("submit", e => {
       e.preventDefault();
       const v = id => $(id).value.trim();
@@ -209,6 +213,9 @@
 
   /* ---------- Ảnh nền đầu trang con ---------- */
   $$(".page-hero .bg[data-bg]").forEach(el => { const u = (P.pageBg || {})[el.dataset.bg]; if (u) { el.style.backgroundImage = `url(${root}${u})`; el.classList.add("show"); } });
+
+  /* ---------- Nút Zalo nổi ---------- */
+  if (zaloUrl) { const z = document.createElement("a"); z.className = "zalo-float"; z.href = zaloUrl; z.target = "_blank"; z.rel = "noopener"; z.setAttribute("aria-label", "Nhắn Zalo " + fmtPhone(P.zalo)); z.innerHTML = "<b>Zalo</b>"; document.body.appendChild(z); }
 
   /* ---------- Nút lên đầu trang ---------- */
   const top = document.createElement("button");
