@@ -6,7 +6,7 @@ const PROFILE = {
   phone: "0777001183",
   email: "vandq9@gmail.com",
   area: "Hải Phòng",
-  photo: "images/avatar.jpg",
+  photo: "images/anh-trang-chu.jpg",
   photoCv: "images/avatar-cv.jpg",
   logo: "images/logo.png",
   heroPhotos: ["images/xuong-block.jpg", "images/new-journey.jpg"],
