@@ -62,7 +62,7 @@
   /* ---------- Thẻ video ---------- */
   const thumbCache = {};
   const vcard = v => `<a class="vcard reveal" href="https://www.tiktok.com/@vandq96/video/${v.id}" target="_blank" rel="noopener" data-vid="${v.id}" aria-label="Xem video: ${esc(v.title)}">
-    <img alt="" loading="lazy" data-thumb="${v.id}" hidden>
+    <img alt="" loading="lazy" src="${root}images/videos/${v.id}.jpg" onerror="this.remove()">
     ${v.pinned ? '<span class="pin">📌 Ghim</span>' : ""}<span class="play">▶</span>
     <span class="vinfo"><span class="vtag">${esc(v.tag)}</span><h3>${esc(v.title)}</h3><div class="views">▶ ${esc(v.views)} lượt xem</div></span></a>`;
   function loadThumbs(scope) {
@@ -115,7 +115,7 @@
     }
     $("#home-posts").innerHTML = posts.slice(0, 4).map((p, i) => card(p, i === 0)).join("");
     $("#home-videos").innerHTML = videos.slice(0, 4).map(vcard).join("");
-    loadThumbs($("#home-videos"));
+    
   }
 
   /* ---------- Hồ sơ ---------- */
@@ -151,7 +151,7 @@
     const tags = ["Tất cả", ...new Set(videos.map(v => v.tag))]; let cur = "Tất cả";
     const f = $("#vfilters"), grid = $("#all-videos");
     f.innerHTML = tags.map(t => `<button class="chip${t === cur ? " active" : ""}" type="button" data-t="${esc(t)}">${esc(t)}</button>`).join("");
-    const render = () => { grid.innerHTML = videos.filter(v => cur === "Tất cả" || v.tag === cur).map(vcard).join(""); loadThumbs(grid); reveal(); };
+    const render = () => { grid.innerHTML = videos.filter(v => cur === "Tất cả" || v.tag === cur).map(vcard).join(""); reveal(); };
     f.addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; cur = b.dataset.t; $$(".chip", f).forEach(x => x.classList.toggle("active", x === b)); render(); });
     render();
     const st = S.tiktokStats || {};
