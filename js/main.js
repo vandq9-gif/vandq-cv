@@ -18,7 +18,7 @@
   /* ---------- Header ---------- */
   const NAV = [
     ["home", "index.html", "Trang chủ"], ["cv", "ho-so.html", "Hồ sơ"], ["posts", "bai-viet.html", "Bài viết"],
-    ["video", "video.html", "Video"], ["run", "chay-bo.html", "Chạy bộ"], ["contact", "lien-he.html", "Liên hệ"]
+    ["projects", "du-an.html", "Dự án"], ["video", "video.html", "Video"], ["run", "chay-bo.html", "Chạy bộ"], ["contact", "lien-he.html", "Liên hệ"]
   ];
   const activeKey = page === "post" ? "posts" : page;
   const header = $("#site-header");
@@ -120,6 +120,24 @@
     $("#home-videos").innerHTML = videos.slice(0, 4).map(vcard).join("");
     
   }
+
+  /* ---------- Dự án ---------- */
+  const PJ = typeof PROJECTS !== "undefined" ? PROJECTS : [];
+  const pjCard = (x, short) => `<article class="pj reveal" id="${x.id}">
+    <a class="pj-shot" href="${root}${x.demo}" target="_blank" rel="noopener"><img src="${root}images/du-an/${x.id}.jpg" alt="Giao diện ${esc(x.name)} (dữ liệu ảo)" loading="lazy"><span class="pj-play">▶ Dùng thử</span></a>
+    <div class="pj-body">
+      <div class="pj-top"><span class="pj-ico">${x.icon}</span><div><h3>${esc(x.name)}</h3><span class="pj-tag">${esc(x.tag)}</span></div><span class="pj-st ${x.status === "Đang dùng thực tế" ? "live" : x.status === "Thử nghiệm" ? "beta" : "dev"}">${esc(x.status)}</span></div>
+      <p class="pj-prob">${esc(x.problem)}</p>
+      ${short ? "" : `<ul class="pj-feat">${x.features.map(f => `<li>${esc(f)}</li>`).join("")}</ul>`}
+      <div class="tags">${x.tech.map(t => `<span>${esc(t)}</span>`).join("")}</div>
+      <div class="pj-act"><a class="btn btn-dark btn-sm" href="${root}${x.demo}" target="_blank" rel="noopener">Dùng thử demo ↗</a>${short ? `<a class="btn btn-line btn-sm" href="${root}du-an.html#${x.id}">Chi tiết</a>` : ""}</div>
+    </div></article>`;
+  if (page === "projects") {
+    $("#ds-du-an").innerHTML = PJ.map(x => pjCard(x)).join("");
+    const live = PJ.filter(x => x.status === "Đang dùng thực tế").length;
+    $("#pj-stats").innerHTML = [[PJ.length, "ứng dụng tự xây"], [live, "đang dùng thực tế"], ["1 người", "tự thiết kế & vận hành"], ["100%", "bắt đầu từ việc thật"]].map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join("");
+  }
+  if (page === "home" && $("#home-projects")) $("#home-projects").innerHTML = PJ.slice(0, 3).map(x => pjCard(x, true)).join("");
 
   /* ---------- Hồ sơ ---------- */
   if (page === "cv") {

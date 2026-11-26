@@ -29,3 +29,27 @@ const RUN_MILESTONES = [
   { when: "11/11/2026", title: "PR 10 km – 49:40", text: "Kỷ lục cá nhân mới: 10,01 km, pace 4:58 – từ pace 7:04 của lần đầu chạy 10 km hồi tháng 5.", post: "pr-10km-49-40-tu-500m-den-duoi-50-phut", video: "7706851282635590920" },
   { when: "Tiếp theo", title: "Bán marathon 21 km dưới 2 giờ", text: "Mục tiêu tiếp theo: duy trì 150 km mỗi tháng và hoàn thành 21 km dưới 2 giờ.", post: "" }
 ];
+
+/* Dự án / sản phẩm tự xây dựng – mỗi demo chạy bằng DỮ LIỆU ẢO trên trình duyệt người xem */
+const PROJECTS = [
+  { id: "hr-portal", name: "HR Portal", icon: "👥", tag: "Nhân sự – Tiền lương", status: "Đang dùng thực tế",
+    problem: "Hồ sơ nhân viên, chấm công, bảng lương, BHXH và hợp đồng nằm rải rác trong Excel, Word và giấy tờ – cuối tháng mất nhiều ngày để tính lương.",
+    features: ["Hồ sơ nhân viên, hợp đồng, phụ lục tự sinh theo mẫu", "Chấm công, tăng ca, đánh giá hiệu suất theo tháng", "Bảng lương tự tính BHXH, giảm trừ gia cảnh, thuế TNCN", "Người nhận khoán, biên bản nghiệm thu, xuất Excel/PowerPoint"],
+    tech: ["HTML/JS", "Chạy offline", "Lưu OneDrive", "Xuất .xlsx/.pptx"], demo: "du-an/hr-portal/index.html" },
+  { id: "project-block", name: "Project Block", icon: "🏗️", tag: "Quản lý dự án gia công", status: "Đang dùng thực tế",
+    problem: "Mỗi block tàu có khối lượng, đơn giá, tạm ứng, khoán hàn và hàng chục biên bản – theo dõi bằng Excel dễ sót và khó biết lãi lỗ từng block.",
+    features: ["Dashboard doanh thu – chi phí – lợi nhuận từng block", "Theo dõi trạng thái: giao khoán → thi công → hàn → nghiệm thu → thanh toán", "Sổ tạm ứng, phạt, công nợ khách hàng và tổ hàn", "Tự sinh biên bản, nhắc hồ sơ còn thiếu, xuất Excel"],
+    tech: ["HTML/JS", "Kho dữ liệu đám mây", "Biểu đồ", "Xuất .xlsx/PDF"], demo: "du-an/project-block/index.html" },
+  { id: "ke-toan", name: "Kế toán nội bộ", icon: "📒", tag: "Kế toán – Tài chính", status: "Đang dùng thực tế",
+    problem: "Doanh nghiệp nhỏ cần sổ sách theo Thông tư 133 nhưng phần mềm thương mại nặng và không nối được với dữ liệu nhân sự, dự án.",
+    features: ["Phiếu thu/chi, ủy nhiệm chi, chứng từ mua hàng, quyết toán block", "Hệ thống tài khoản TT133, sổ cái, nhật ký chung, cân đối phát sinh", "Báo cáo kết quả kinh doanh, chỉ số tài chính trực quan", "Đồng bộ danh mục từ HR Portal và Project Block"],
+    tech: ["HTML/JS", "Thông tư 133", "Chạy trên máy văn phòng", "Báo cáo tài chính"], demo: "du-an/ke-toan/index.html" },
+  { id: "van-phong-ao", name: "Văn phòng ảo", icon: "🏢", tag: "Nhân viên AI", status: "Thử nghiệm",
+    problem: "Một người phải làm việc của nhiều phòng ban. Ý tưởng: dựng một văn phòng với các “nhân viên AI”, mỗi người một vai trò, nhận việc – làm – nộp kết quả để Giám đốc duyệt.",
+    features: ["Sơ đồ văn phòng 3D, mỗi phòng ban một nhóm nhân viên AI", "Giao việc, theo dõi trạng thái, duyệt hoặc yêu cầu sửa", "Bản tin sáng, nhắc lịch, sổ tay công ty dùng chung", "Bản demo tắt AI – chỉ minh họa luồng làm việc"],
+    tech: ["HTML/JS", "Claude AI", "Isometric 3D", "Đọc to (TTS)"], demo: "du-an/van-phong-ao/index.html" },
+  { id: "hoc-tieng-anh", name: "Game học tiếng Anh", icon: "🎮", tag: "Học tập", status: "Đang phát triển",
+    problem: "Học từ vựng một mình rất dễ bỏ cuộc. Biến việc học mỗi ngày thành một trò chơi: đi quanh thành phố 3D, gặp nhân vật để luyện từ vựng, nghe và nói.",
+    features: ["Thế giới 3D, điều khiển bằng bàn phím hoặc cảm ứng", "Mỗi ngày một đoạn văn, có phiên âm và mẹo nối âm", "Luyện nói với nhận diện giọng nói, chấm điểm", "Tích điểm kinh nghiệm, lên cấp, nhiệm vụ hằng ngày"],
+    tech: ["Three.js", "Web Speech", "Game hóa", "Mobile"], demo: "du-an/hoc-tieng-anh/index.html" }
+];
