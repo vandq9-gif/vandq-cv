@@ -137,6 +137,22 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 const h = (html) => { const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstElementChild; };
 function toast(msg, ms = 2600) { const t = h(`<div class="toast">${esc(msg)}</div>`); document.body.appendChild(t); setTimeout(() => t.remove(), ms); }
 const token = () => localStorage.getItem("adm_token") || "";
+/* Hộp hỏi đáp tự làm (không dùng confirm/prompt của trình duyệt – một số trình duyệt chặn) */
+function uiDialog(msg, withInput, def) {
+  return new Promise(res => {
+    const m = h(`<div class="modal" style="z-index:120"><div class="box" style="max-width:440px"><p style="white-space:pre-line;font-weight:600;margin-bottom:12px">${esc(msg)}</p>${withInput ? `<input type="text">` : ""}<div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn" data-n>Hủy</button><button class="btn pri" data-y>Đồng ý</button></div></div></div>`);
+    document.body.appendChild(m);
+    const inp = $("input", m); if (inp) { inp.value = def || ""; setTimeout(() => { inp.focus(); inp.select(); }, 30); }
+    const end = v => { m.remove(); res(v); };
+    $("[data-y]", m).onclick = () => end(withInput ? inp.value : true);
+    $("[data-n]", m).onclick = () => end(withInput ? null : false);
+    m.addEventListener("keydown", e => { if (e.key === "Enter") $("[data-y]", m).click(); if (e.key === "Escape") $("[data-n]", m).click(); });
+    if (!inp) setTimeout(() => $("[data-y]", m).focus(), 30);
+  });
+}
+const uiConfirm = msg => uiDialog(msg, false);
+const uiPrompt = (msg, def) => uiDialog(msg, true, def);
+
 
 /* ================= GitHub ================= */
 async function gh(path, opt = {}) {
@@ -173,9 +189,9 @@ const PEND_LABEL = {};
 function stage(path, data, label) { PEND[path] = data; PEND_LABEL[path] = label || path; updPend(); }
 function updPend() { const n = Object.keys(PEND).length; $("#pend-count").textContent = n; $("#btn-publish").disabled = !n; }
 addEventListener("beforeunload", e => { if (Object.keys(PEND).length) { e.preventDefault(); e.returnValue = ""; } });
-$("#btn-discard").onclick = () => {
+$("#btn-discard").onclick = async () => {
   if (!Object.keys(PEND).length) return toast("Chưa có thay đổi nào.");
-  if (!confirm("Bỏ toàn bộ thay đổi chưa xuất bản?")) return;
+  if (!await uiConfirm("Bỏ toàn bộ thay đổi chưa xuất bản?")) return;
   for (const k in PEND) delete PEND[k]; updPend(); show(CUR, true); toast("Đã bỏ thay đổi.");
 };
 $("#btn-publish").onclick = openPublish;
@@ -338,7 +354,7 @@ function fieldFor(obj, key, onChange, ctx = "") {
   } else if (v && typeof v === "object") {
     const box = h(`<div class="nested"></div>`);
     Object.keys(v).forEach(k => box.appendChild(fieldFor(v, k, onChange)));
-    if (key === "covers" || key === "pageBg") { const add = h(`<button class="btn sm" type="button">＋ Thêm</button>`); add.onclick = () => { const k = prompt("Mã (ví dụ mã bài viết):"); if (k) { v[k] = ""; box.insertBefore(fieldFor(v, k, onChange), add); onChange && onChange(); } }; box.appendChild(add); }
+    if (key === "covers" || key === "pageBg") { const add = h(`<button class="btn sm" type="button">＋ Thêm</button>`); add.onclick = async () => { const k = await uiPrompt("Mã (ví dụ mã bài viết):"); if (k) { v[k] = ""; box.insertBefore(fieldFor(v, k, onChange), add); onChange && onChange(); } }; box.appendChild(add); }
     fv.appendChild(box);
   } else {
     const i = h(`<input type="text">`); i.value = v == null ? "" : String(v); i.oninput = () => set(i.value); fv.appendChild(i);
@@ -362,13 +378,13 @@ function listEditor(arr, onChange, opt = {}) {
       $(".ih", el).onclick = e => { if (e.target.closest("button")) return; el.classList.toggle("open"); if (!ib.childElementCount) { Object.keys(it).forEach(k => ib.appendChild(fieldFor(it, k, () => { $(".t", el).innerHTML = (opt.icon ? esc(opt.icon(it)) + " " : "") + titleOf(it); onChange && onChange(); }))); opt.after && opt.after(it, ib); } };
       $("[data-up]", el).onclick = () => { if (i > 0) { [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]]; render(); onChange && onChange(); } };
       $("[data-dn]", el).onclick = () => { if (i < arr.length - 1) { [arr[i + 1], arr[i]] = [arr[i], arr[i + 1]]; render(); onChange && onChange(); } };
-      $("[data-rm]", el).onclick = async () => { if (!confirm("Xóa mục “" + (it.title || it.name || it.text || it.l || "") + "”?")) return; if (opt.onRemove && (await opt.onRemove(it)) === false) return; arr.splice(i, 1); render(); onChange && onChange(); };
+      $("[data-rm]", el).onclick = async () => { if (!await uiConfirm("Xóa mục “" + (it.title || it.name || it.text || it.l || "") + "”?")) return; if (opt.onRemove && (await opt.onRemove(it)) === false) return; arr.splice(i, 1); render(); onChange && onChange(); };
       opt.wire && opt.wire(el, it, i);
       box.appendChild(el);
     });
     if (!opt.noAdd) {
       const add = h(`<button class="btn sm" type="button">＋ Thêm mục</button>`);
-      add.onclick = () => { const n = opt.make ? opt.make() : blankLike(arr[0] || { text: "" }); if (!n) return; arr.push(n); render(); onChange && onChange(); const last = box.querySelectorAll(".item"); last[last.length - 1].querySelector(".ih").click(); };
+      add.onclick = async () => { const n = opt.make ? await opt.make() : blankLike(arr[0] || { text: "" }); if (!n) return; arr.push(n); render(); onChange && onChange(); const last = box.querySelectorAll(".item"); last[last.length - 1].querySelector(".ih").click(); };
       box.appendChild(add);
     }
   };
@@ -379,8 +395,8 @@ function listEditor(arr, onChange, opt = {}) {
 /* ================= Điều hướng tab ================= */
 let CUR = "";
 const TABS = {};
-function show(tab, force) {
-  if (CUR === "pages" && tab !== "pages" && EDITOR.dirty && !force) { if (!confirm("Trang đang sửa chưa “Lưu thay đổi”. Bỏ qua?")) return; }
+async function show(tab, force) {
+  if (CUR === "pages" && tab !== "pages" && EDITOR.dirty && !force) { if (!await uiConfirm("Trang đang sửa chưa “Lưu thay đổi”. Bỏ qua?")) return; }
   CUR = tab; $$("#side button").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
   const m = $("#main"); m.innerHTML = ""; m.scrollTop = 0;
   if (tab !== "connect" && tab !== "help" && !token()) { m.appendChild(h(`<div class="pane"><div class="note">Anh cần <b>kết nối GitHub</b> một lần trước khi sửa web.</div><button class="btn pri" onclick="document.querySelector('[data-tab=connect]').click()">Kết nối ngay</button></div>`)); return; }
@@ -510,7 +526,7 @@ TABS.videos = async m => {
   const p = pane(m, "🎬 Video", "Thẻ video ở trang Video và trang chủ. Ảnh bìa lấy từ <code>images/videos/&lt;mã&gt;.jpg</code>.");
   const c = h(`<div class="card"></div>`);
   c.appendChild(listEditor(d.VIDEOS, null, {
-    make: () => { const id = prompt("Dán link video TikTok (hoặc mã số video):"); if (!id) return null; const mm = String(id).match(/(\d{15,})/); return { id: mm ? mm[1] : id.trim(), title: "Video mới", views: "0", tag: "Kinh nghiệm làm việc", pinned: false }; },
+    make: async () => { const id = await uiPrompt("Dán link video TikTok (hoặc mã số video):"); if (!id) return null; const mm = String(id).match(/(\d{15,})/); return { id: mm ? mm[1] : id.trim(), title: "Video mới", views: "0", tag: "Kinh nghiệm làm việc", pinned: false }; },
     after: (it, ib) => { const r = h(`<div class="field"><label>Ảnh bìa video</label><div class="imgf"><img alt=""><span class="hint" style="flex:1">images/videos/${esc(it.id)}.jpg</span><button class="btn sm">⬆ Tải ảnh bìa</button></div></div>`); const im = $("img", r); im.src = imgUrl(`images/videos/${it.id}.jpg`); $("button", r).onclick = async () => { const pth = await uploadImage("images/videos", `images/videos/${it.id}.jpg`); if (pth) im.src = PREVIEW[pth]; }; ib.appendChild(r); }
   }));
   p.appendChild(c);
@@ -570,15 +586,59 @@ TABS.pass = async m => {
     cfg.list.forEach((e, i) => {
       const expired = e.exp && e.exp < todayISO();
       const st = e.on === false ? `<b style="color:#b91c1c">Đã khóa</b>` : expired ? `<b style="color:#b45309">Hết hạn</b>` : `<b style="color:#047857">Đang dùng</b>`;
-      const el = h(`<div class="item"><div class="ih" style="cursor:default;flex-wrap:wrap"><span class="t">${esc(e.label || "(không tên)")}</span>
+      const el = h(`<div class="item"><div class="ih" style="cursor:default;flex-wrap:wrap"><span class="t" style="min-width:160px">${esc(e.label || "(không tên)")}</span>
         <span class="hint">${st} · hạn: ${fmt(e.exp)} · ${e.apps && e.apps.length ? e.apps.map(appName).map(esc).join(", ") : "tất cả ứng dụng"} · tạo ${fmt(e.created)}</span>
-        <button class="btn sm" data-t>${e.on === false ? "Mở lại" : "Khóa"}</button><button class="btn sm" data-x>Gia hạn</button><button class="btn sm bad" data-r>Xóa</button></div></div>`);
+        <button class="btn sm" data-e>✏️ Sửa</button><button class="btn sm" data-t>${e.on === false ? "Mở lại" : "Khóa"}</button><button class="btn sm" data-x>Gia hạn</button><button class="btn sm bad" data-r>Xóa</button></div></div>`);
       $("[data-t]", el).onclick = () => { e.on = e.on === false; draw(); };
-      $("[data-x]", el).onclick = () => { const v = prompt("Hạn mới (YYYY-MM-DD), để trống = không hạn:", todayISO(30)); if (v === null) return; if (v && !/^\d{4}-\d{2}-\d{2}$/.test(v.trim())) return toast("Ngày chưa đúng dạng 2026-12-31"); e.exp = v.trim(); draw(); };
-      $("[data-r]", el).onclick = () => { if (confirm("Xóa mật khẩu của “" + (e.label || "") + "”? Người này sẽ không vào được nữa.")) { cfg.list.splice(i, 1); draw(); } };
+      $("[data-e]", el).onclick = () => editPass(e);
+      $("[data-x]", el).onclick = async () => { const v = await uiPrompt("Hạn mới (YYYY-MM-DD), để trống = không hạn:", todayISO(30)); if (v === null) return; if (v && !/^\d{4}-\d{2}-\d{2}$/.test(v.trim())) return toast("Ngày chưa đúng dạng 2026-12-31"); e.exp = v.trim(); draw(); };
+      $("[data-r]", el).onclick = async () => { if (await uiConfirm("Xóa mật khẩu của “" + (e.label || "") + "”? Người này sẽ không vào được nữa.")) { cfg.list.splice(i, 1); draw(); toast("Đã xóa – nhớ bấm 💾 Lưu mật khẩu rồi 🚀 Xuất bản."); } };
       box.appendChild(el);
     });
     warn();
+  };
+  const showPw = (pw, exp, title) => {
+    const msg = `Chào anh/chị,\nMời anh/chị dùng thử các ứng dụng tôi tự xây dựng tại: https://vandq.id.vn/du-an.html\nMật khẩu: ${pw}${exp ? `\n(Dùng được đến ${fmt(exp)})` : ""}\nMọi dữ liệu trong bản dùng thử đều là dữ liệu minh họa.\n– Đinh Quý Văn`;
+    const md = h(`<div class="modal"><div class="box"><h3>${esc(title)}</h3>
+      <p class="hint">Hãy sao chép ngay – trang quản trị <b>không lưu lại</b> mật khẩu gốc.</p>
+      <div style="font:700 22px monospace;background:#f1efeb;border-radius:12px;padding:12px;text-align:center;margin:10px 0">${esc(pw)}</div>
+      <div class="lab hint">Tin nhắn gửi kèm (sửa tùy ý)</div><textarea rows="7">${esc(msg)}</textarea>
+      <div class="row" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-c>📋 Chép tin nhắn</button><button class="btn pri" data-x>Xong</button></div>
+      <p class="hint" style="margin-top:8px">Nhớ bấm <b>💾 Lưu mật khẩu</b> rồi <b>🚀 Xuất bản</b> thì mới có hiệu lực.</p></div></div>`);
+    document.body.appendChild(md);
+    $("[data-c]", md).onclick = () => { navigator.clipboard && navigator.clipboard.writeText($("textarea", md).value); toast("Đã chép tin nhắn."); };
+    $("[data-x]", md).onclick = () => md.remove();
+  };
+  const editPass = e => {
+    const md = h(`<div class="modal"><div class="box"><h3>✏️ Sửa mật khẩu đã cấp</h3>
+      <div class="lab hint">Cấp cho</div><input type="text" data-l>
+      <div class="lab hint" style="margin-top:8px">Mật khẩu mới (để trống = giữ mật khẩu cũ)</div>
+      <div class="row"><input type="text" data-p style="flex:1;font-family:monospace" placeholder="giữ nguyên mật khẩu cũ"><button class="btn sm" data-g>🎲 Ngẫu nhiên</button></div>
+      <div class="lab hint" style="margin-top:8px">Hạn dùng (để trống = không hạn)</div>
+      <div class="row"><input type="date" data-ex style="max-width:200px"><button class="btn sm" data-d="7">7 ngày</button><button class="btn sm" data-d="30">30 ngày</button><button class="btn sm" data-d="0">Không hạn</button></div>
+      <div class="lab hint" style="margin-top:8px">Được mở ứng dụng (không tick = tất cả)</div>
+      <div class="row" data-a>${PJ.map(x => `<label class="chk" style="margin-right:10px"><input type="checkbox" value="${esc(x.id)}"> ${esc(x.icon)} ${esc(x.name)}</label>`).join("")}</div>
+      <label class="chk" style="margin-top:10px"><input type="checkbox" data-on> Đang cho phép sử dụng</label>
+      <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn" data-n>Hủy</button><button class="btn pri" data-y>Lưu sửa đổi</button></div></div></div>`);
+    document.body.appendChild(md);
+    $("[data-l]", md).value = e.label || ""; $("[data-ex]", md).value = e.exp || ""; $("[data-on]", md).checked = e.on !== false;
+    $$("[data-a] input", md).forEach(x => x.checked = (e.apps || []).includes(x.value));
+    $("[data-g]", md).onclick = () => $("[data-p]", md).value = randPass();
+    $$("[data-d]", md).forEach(b => b.onclick = () => $("[data-ex]", md).value = b.dataset.d === "0" ? "" : todayISO(+b.dataset.d));
+    $("[data-n]", md).onclick = () => md.remove();
+    $("[data-y]", md).onclick = async () => {
+      const pw = $("[data-p]", md).value.trim();
+      if (pw) {
+        if (pw.length < 6) return toast("Mật khẩu nên dài ít nhất 6 ký tự.");
+        const hash = await sha256(cfg.salt + ":" + pw);
+        if (cfg.list.some(x => x !== e && x.hash === hash)) return toast("Mật khẩu này đang cấp cho người khác, chọn mật khẩu khác.");
+        e.hash = hash;
+      }
+      e.label = $("[data-l]", md).value.trim(); e.exp = $("[data-ex]", md).value; e.on = $("[data-on]", md).checked;
+      e.apps = $$("[data-a] input:checked", md).map(x => x.value);
+      md.remove(); draw();
+      if (pw) showPw(pw, e.exp, "✅ Đã đổi mật khẩu"); else toast("Đã sửa – nhớ 💾 Lưu mật khẩu rồi 🚀 Xuất bản.");
+    };
   };
   draw();
   $("#np-go", c3).onclick = async () => {
@@ -590,16 +650,7 @@ TABS.pass = async m => {
     const exp = $("#np-e", c3).value;
     cfg.list.unshift({ label, hash, apps, exp, on: true, created: todayISO() });
     draw();
-    const msg = `Chào anh/chị,\nMời anh/chị dùng thử các ứng dụng tôi tự xây dựng tại: https://vandq.id.vn/du-an.html\nMật khẩu: ${pw}${exp ? `\n(Dùng được đến ${fmt(exp)})` : ""}\nMọi dữ liệu trong bản dùng thử đều là dữ liệu minh họa.\n– Đinh Quý Văn`;
-    const md = h(`<div class="modal"><div class="box"><h3>✅ Đã tạo mật khẩu</h3>
-      <p class="hint">Hãy sao chép ngay – vì lý do bảo mật, trang quản trị <b>không lưu lại</b> mật khẩu gốc, sau này chỉ khóa/gia hạn/xóa được.</p>
-      <div style="font:700 22px monospace;background:#f1efeb;border-radius:12px;padding:12px;text-align:center;margin:10px 0">${esc(pw)}</div>
-      <div class="lab hint">Tin nhắn gửi kèm (sửa tùy ý)</div><textarea rows="7">${esc(msg)}</textarea>
-      <div class="row" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-c>📋 Chép tin nhắn</button><button class="btn pri" data-x>Xong</button></div>
-      <p class="hint" style="margin-top:8px">Nhớ bấm <b>💾 Lưu</b> rồi <b>🚀 Xuất bản</b> thì mật khẩu mới có hiệu lực.</p></div></div>`);
-    document.body.appendChild(md);
-    $("[data-c]", md).onclick = () => { navigator.clipboard && navigator.clipboard.writeText($("textarea", md).value); toast("Đã chép tin nhắn."); };
-    $("[data-x]", md).onclick = () => md.remove();
+    showPw(pw, exp, "✅ Đã tạo mật khẩu");
     $("#np-p", c3).value = randPass(); $("#np-l", c3).value = ""; $$("#np-a input", c3).forEach(x => x.checked = false);
   };
   p.appendChild(h(`<div class="hint" style="margin:4px 0 10px">Ghi chú: mỗi lần mở ứng dụng, mật khẩu luôn được kiểm tra lại – anh khóa, xóa hoặc mật khẩu hết hạn là chặn ngay lần mở sau. Mọi bản demo chỉ chứa dữ liệu ảo.</div>`));
@@ -619,7 +670,7 @@ TABS.media = async m => {
     const el = h(`<div class="g"><img loading="lazy" alt=""><div><a href="#" data-c>${esc(path)}</a><br>${PEND[path] && PEND[path].del ? "<b style='color:#b91c1c'>sẽ xóa</b>" : `<a href="#" data-d style="color:#b91c1c">xóa</a>`}</div></div>`);
     $("img", el).src = imgUrl(path);
     $("[data-c]", el).onclick = e => { e.preventDefault(); navigator.clipboard && navigator.clipboard.writeText(path); toast("Đã chép: " + path); };
-    const dl = $("[data-d]", el); if (dl) dl.onclick = e => { e.preventDefault(); if (confirm("Xóa ảnh " + path + "? Chỗ nào đang dùng ảnh này sẽ bị trống.")) { stage(path, { del: true }, "Xóa ảnh " + path.split("/").pop()); draw($("input", up).value.toLowerCase()); } };
+    const dl = $("[data-d]", el); if (dl) dl.onclick = async e => { e.preventDefault(); if (await uiConfirm("Xóa ảnh " + path + "? Chỗ nào đang dùng ảnh này sẽ bị trống.")) { stage(path, { del: true }, "Xóa ảnh " + path.split("/").pop()); draw($("input", up).value.toLowerCase()); } };
     g.appendChild(el); }); };
   draw("");
   $("input", up).oninput = e => draw(e.target.value.toLowerCase());
@@ -639,7 +690,7 @@ TABS.posts = async m => {
     noAdd: true, icon: it => it.emoji || "",
     extraBtn: () => `<button class="btn sm" data-edit title="Soạn nội dung bài">✏️ Nội dung</button><a class="btn sm" data-view target="_blank" title="Xem">↗</a>`,
     wire: (el, it) => { $("[data-edit]", el).onclick = () => { PAGE_TO_OPEN = `bai-viet/${it.slug}.html`; show("pages"); }; $("[data-view]", el).href = SITE_URL + `bai-viet/${it.slug}.html`; },
-    onRemove: async it => { if (confirm("Xóa luôn trang bài viết bai-viet/" + it.slug + ".html? (Bấm Hủy để chỉ ẩn khỏi danh sách)")) stage(`bai-viet/${it.slug}.html`, { del: true }, "Xóa bài " + it.title); return true; }
+    onRemove: async it => { if (await uiConfirm("Xóa luôn trang bài viết bai-viet/" + it.slug + ".html? (Bấm Hủy để chỉ ẩn khỏi danh sách)")) stage(`bai-viet/${it.slug}.html`, { del: true }, "Xóa bài " + it.title); return true; }
   }));
   p.appendChild(c);
   saveBar(p, "Lưu danh sách bài viết", async () => {
@@ -763,7 +814,7 @@ TABS.pages = async m => {
   sel.innerHTML = pages.sort((a, b) => (a.startsWith("bai-viet/") - b.startsWith("bai-viet/")) || (Object.keys(PAGE_NAMES).indexOf(a) - Object.keys(PAGE_NAMES).indexOf(b))).map(x => `<option value="${esc(x)}">${esc(nameOf(x))}</option>`).join("");
   if (!pages.includes(PAGE_TO_OPEN)) PAGE_TO_OPEN = "index.html";
   sel.value = PAGE_TO_OPEN;
-  sel.onchange = () => { if (EDITOR.dirty && !confirm("Trang này chưa Lưu thay đổi. Bỏ qua?")) { sel.value = EDITOR.path; return; } PAGE_TO_OPEN = sel.value; openPage(sel.value); };
+  sel.onchange = async () => { if (EDITOR.dirty && !await uiConfirm("Trang này chưa Lưu thay đổi. Bỏ qua?")) { sel.value = EDITOR.path; return; } PAGE_TO_OPEN = sel.value; openPage(sel.value); };
   $$("[data-w]", ed).forEach(b => b.onclick = () => $("#fr", ed).style.width = b.dataset.w);
   $("#pg-save", ed).onclick = savePage;
   wireToolbar(ed);
@@ -869,7 +920,7 @@ function markNew(sRoot, fRoot) {
   sRoot.querySelectorAll("a").forEach(el => el.setAttribute("data-a", "x"));
   return sRoot;
 }
-function blockOp(op, fB) {
+async function blockOp(op, fB) {
   const id = fB.dataset.blk, [sB] = pair("data-blk", id);
   if (!sB) return;
   const prevEl = (el) => { let p = el.previousElementSibling; while (p && !p.hasAttribute("data-blk")) p = p.previousElementSibling; return p; };
@@ -878,7 +929,7 @@ function blockOp(op, fB) {
   if (op === "dn") { const nf = nextEl(fB); if (!nf) return; const [ns] = pair("data-blk", nf.dataset.blk); fB.parentNode.insertBefore(nf, fB); sB.parentNode.insertBefore(ns, sB); }
   if (op === "hide") { if (sB.hasAttribute("data-an")) { sB.removeAttribute("data-an"); fB.removeAttribute("data-an"); } else { sB.setAttribute("data-an", ""); fB.setAttribute("data-an", ""); } toast(sB.hasAttribute("data-an") ? "Khối sẽ bị ẩn trên web (vẫn hiện mờ ở đây)." : "Khối sẽ hiện lại."); }
   if (op === "dup") { flushEdits(); const sc = sB.cloneNode(true), fc = fB.cloneNode(true); fc.classList.remove("__hov"); sB.after(sc); fB.after(fc); reindex(sc, fc); }
-  if (op === "rm") { if (!confirm("Xóa khối này khỏi trang? (Nếu chỉ muốn tạm giấu, dùng 👁 Ẩn)")) return; sB.remove(); fB.remove(); }
+  if (op === "rm") { if (!await uiConfirm("Xóa khối này khỏi trang? (Nếu chỉ muốn tạm giấu, dùng 👁 Ẩn)")) return; sB.remove(); fB.remove(); }
   if (op === "add") return addBlockPanel(fB);
   EDITOR.dirty = true;
 }
@@ -975,7 +1026,7 @@ function imagePanel(fi) {
   };
   $("#im-up", side).onclick = async () => { const p = await uploadImage(); if (p) { $("#im-p", side).value = root + p; apply(root + p, PREVIEW[p]); } };
   $("#im-ok", side).onclick = () => apply($("#im-p", side).value.trim());
-  $("#im-rm", side).onclick = () => { if (!confirm("Xóa ảnh khỏi trang?")) return; if (inRich) { const fig = fi.closest("figure"); (fig && inRich.contains(fig) ? fig : fi).remove(); } else { fi.remove(); if (si) si.remove(); } EDITOR.dirty = true; renderSide(); };
+  $("#im-rm", side).onclick = async () => { if (!await uiConfirm("Xóa ảnh khỏi trang?")) return; if (inRich) { const fig = fi.closest("figure"); (fig && inRich.contains(fig) ? fig : fi).remove(); } else { fi.remove(); if (si) si.remove(); } EDITOR.dirty = true; renderSide(); };
   $("#im-x", side).onclick = renderSide;
 }
 function wireToolbar(ed) {
@@ -990,13 +1041,13 @@ function wireToolbar(ed) {
         if (!hs) return toast("Tiêu đề, danh sách, trích dẫn chỉ dùng trong thân bài viết. Chữ ở chỗ khác chỉ cần sửa trực tiếp.");
         if (b.dataset.b) d.execCommand("formatBlock", false, b.dataset.b); else d.execCommand(b.dataset.c, false, null);
       }
-      if (b.dataset.k === "link") { const u = prompt("Dán đường link:", "https://"); if (u) { d.execCommand("createLink", false, u); } }
+      if (b.dataset.k === "link") { const sl = d.getSelection(); const rg = sl.rangeCount ? sl.getRangeAt(0).cloneRange() : null; const u = await uiPrompt("Dán đường link:", "https://"); if (u && rg) { sl.removeAllRanges(); sl.addRange(rg); d.execCommand("createLink", false, u); } }
       if (b.dataset.k === "img") {
         const sel = d.getSelection(); const node = sel.rangeCount && sel.anchorNode; const host = node && (node.nodeType === 1 ? node : node.parentElement).closest("[data-rich]");
         if (!host) return toast("Đặt con trỏ vào thân bài viết (vùng văn bản) trước khi chèn ảnh.");
         const range = sel.getRangeAt(0).cloneRange();
         const p = await uploadImage(); if (!p) return;
-        const cap = prompt("Chú thích ảnh (có thể để trống):", "") || "";
+        const cap = await uiPrompt("Chú thích ảnh (có thể để trống):", "") || "";
         sel.removeAllRanges(); sel.addRange(range);
         d.execCommand("insertHTML", false, `<figure><img src="${PREVIEW[p]}" alt="${esc(cap)}" loading="lazy">${cap ? `<figcaption>${esc(cap)}</figcaption>` : ""}</figure><p><br></p>`);
       }
