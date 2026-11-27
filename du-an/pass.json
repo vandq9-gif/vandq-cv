@@ -1,10 +1,25 @@
 {
-  "enabled": false,
+  "enabled": true,
   "title": "Bản dùng thử cần mật khẩu",
   "message": "Các ứng dụng này dành cho nhà tuyển dụng và đối tác.\nVui lòng liên hệ để nhận mật khẩu dùng thử.",
   "zalo": "0777001183",
   "email": "vandq9@gmail.com",
   "cardNote": "🔒 Cần mật khẩu – liên hệ Zalo 0777001183 để nhận.",
   "salt": "3e6814f0d808cde64840b87167bfd6ef",
-  "list": []
+  "list": [
+    {
+      "label": "My Friend",
+      "hash": "0ee1b865fa7767d1e68da1e855b0bbd4dff2d913559326dc4fd2f75b7dcc2e0a",
+      "apps": [
+        "hr-portal",
+        "project-block",
+        "ke-toan",
+        "van-phong-ao",
+        "hoc-tieng-anh"
+      ],
+      "exp": "",
+      "on": true,
+      "created": "2026-11-27"
+    }
+  ]
 }
