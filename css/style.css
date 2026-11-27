@@ -392,3 +392,35 @@ img.brand-mark{object-fit:cover;background:#000;padding:0}
 /* Khối bị ẩn trong /admin */
 [data-an]{display:none!important}
 .pj-lock{margin-top:10px;font-size:.85rem;color:var(--muted)}
+/* Ảnh chứng chỉ (bản mờ + xem rõ bằng mật khẩu) */
+.docs{margin-top:22px}
+.docs-h{font-size:1rem;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.docs-h small{font-weight:500;font-size:.8rem;color:var(--muted)}
+.docs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+.doc-card{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:4px;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:10px;transition:transform .15s,box-shadow .15s}
+.doc-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.doc-card:focus-visible{outline:2px solid var(--accent)}
+.doc-th{position:relative;display:block;aspect-ratio:4/3;border-radius:10px;overflow:hidden;background:#e9e7e2}
+.doc-th img{width:100%;height:100%;object-fit:cover;filter:blur(2px);transform:scale(1.06)}
+.doc-badge{position:absolute;inset:auto 8px 8px auto;background:rgba(18,20,24,.82);color:#fff;font-size:.75rem;font-weight:700;padding:4px 9px;border-radius:999px}
+.doc-card b{font-size:.92rem;line-height:1.3;margin-top:4px}
+.doc-card small{color:var(--muted);font-size:.8rem}
+.doc-modal{position:fixed;inset:0;z-index:300;background:rgba(10,12,16,.72);display:grid;place-items:center;padding:16px}
+.doc-box{position:relative;background:#fff;border-radius:20px;padding:26px 24px;width:min(420px,100%);max-height:92vh;overflow:auto;text-align:center}
+.doc-modal.wide .doc-box{width:min(980px,100%);text-align:left}
+.doc-box h3{font-size:1.15rem;margin-bottom:6px;padding-right:30px}
+.doc-box p{color:var(--muted);font-size:.9rem;margin-bottom:14px}
+.doc-lock{width:54px;height:54px;border-radius:16px;background:var(--accent-soft);display:grid;place-items:center;font-size:26px;margin:0 auto 12px}
+.doc-box form{display:flex;gap:8px}
+.doc-box input{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:12px;padding:11px 13px;font:inherit;outline:none}
+.doc-box input:focus{border-color:var(--accent)}
+.doc-box form button{border:0;border-radius:12px;background:var(--accent);color:#04140d;font:inherit;font-weight:700;padding:0 18px;cursor:pointer}
+.doc-er{color:#b91c1c;font-size:.85rem;min-height:20px;margin-top:8px}
+.doc-ct a{color:var(--accent-ink);font-weight:600;text-decoration:none;font-size:.9rem}
+.doc-x{position:absolute;top:12px;right:12px;border:0;background:#f1efeb;width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:15px}
+.doc-pages{display:grid;gap:14px}
+.doc-pages img{width:100%;height:auto;border-radius:10px;border:1px solid var(--line);cursor:zoom-in}
+.doc-pages img.zoom{width:auto;max-width:none;cursor:zoom-out}
+.doc-pages{overflow:auto}
+.doc-load{padding:40px;text-align:center;color:var(--muted)}
+@media print{.docs{display:none}}

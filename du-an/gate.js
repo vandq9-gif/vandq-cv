@@ -10,12 +10,28 @@
   function today() { var d = new Date(); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
   function ok(cfg, h) {
     return (cfg.list || []).some(function (e) {
-      return e.hash === h && e.on !== false && (!e.exp || today() <= e.exp) && (!e.apps || !e.apps.length || e.apps.indexOf(app) >= 0);
+      return (e.hash === h || e.h2 === h) && e.on !== false && (!e.exp || today() <= e.exp) && (!e.apps || !e.apps.length || e.apps.indexOf(app) >= 0);
     });
   }
   function sha(s) {
     return crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)).then(function (b) {
       return Array.prototype.map.call(new Uint8Array(b), function (x) { return ("0" + x.toString(16)).slice(-2); }).join("");
+    });
+  }
+  /* mật khẩu kiểu mới: PBKDF2 – 32 byte đầu là mã kiểm tra */
+  function v2(cfg, pw) {
+    var te = new TextEncoder(), salt = new Uint8Array((cfg.salt.match(/../g) || []).map(function (x) { return parseInt(x, 16); }));
+    return crypto.subtle.importKey("raw", te.encode(pw), "PBKDF2", false, ["deriveBits"]).then(function (k) {
+      return crypto.subtle.deriveBits({ name: "PBKDF2", salt: salt, iterations: 150000, hash: "SHA-256" }, k, 512);
+    }).then(function (b) { return Array.prototype.map.call(new Uint8Array(b).slice(0, 32), function (x) { return ("0" + x.toString(16)).slice(-2); }).join(""); });
+  }
+  function check(cfg, pw) {
+    var L = cfg.list || [], jobs = [];
+    if (L.some(function (e) { return e.hash; })) jobs.push(sha((cfg.salt || "") + ":" + pw));
+    if (L.some(function (e) { return e.h2; })) jobs.push(v2(cfg, pw));
+    return Promise.all(jobs).then(function (hs) {
+      for (var i = 0; i < hs.length; i++) if (L.some(function (e) { return e.hash === hs[i] || e.h2 === hs[i]; })) return hs[i];
+      return hs[0] || "";
     });
   }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
@@ -42,9 +58,9 @@
       e.preventDefault();
       var v = i.value.trim(); if (!v) return;
       b.disabled = true; er.textContent = "";
-      sha((cfg.salt || "") + ":" + v).then(function (h) {
+      check(cfg, v).then(function (h) {
         b.disabled = false;
-        var hit = (cfg.list || []).filter(function (x) { return x.hash === h; })[0];
+        var hit = (cfg.list || []).filter(function (x) { return x.hash === h || x.h2 === h; })[0];
         if (ok(cfg, h)) { try { var md = cfg.remember || "never"; if (md !== "never") (md === "session" ? sessionStorage : localStorage).setItem(KEY, JSON.stringify({ h: h, at: Date.now() })); } catch (e) {} open(); return; }
         er.textContent = !hit ? "Mật khẩu chưa đúng." : hit.on === false ? "Mật khẩu này đã bị khóa." : (hit.exp && today() > hit.exp) ? "Mật khẩu này đã hết hạn." : "Mật khẩu này không dùng cho ứng dụng này.";
         i.select();
