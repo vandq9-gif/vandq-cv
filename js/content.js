@@ -50,6 +50,6 @@ const PROJECTS = [
     tech: ["HTML/JS", "Claude AI", "Isometric 3D", "Đọc to (TTS)"], demo: "du-an/van-phong-ao/index.html" },
   { id: "hoc-tieng-anh", name: "Game học tiếng Anh", icon: "🎮", tag: "Học tập", status: "Đang phát triển",
     problem: "Học từ vựng một mình rất dễ bỏ cuộc. Biến việc học mỗi ngày thành một trò chơi: đi quanh thành phố 3D, gặp nhân vật để luyện từ vựng, nghe và nói.",
-    features: ["Thế giới 3D, điều khiển bằng bàn phím hoặc cảm ứng", "Mỗi ngày một đoạn văn, có phiên âm và mẹo nối âm", "Luyện nói với nhận diện giọng nói, chấm điểm", "Tích điểm kinh nghiệm, lên cấp, nhiệm vụ hằng ngày"],
-    tech: ["Three.js", "Web Speech", "Game hóa", "Mobile"], demo: "du-an/hoc-tieng-anh/index.html" }
+    features: ["Thế giới 3D với 9 nhân vật có hoạt ảnh, 3 góc nhìn (POV, sau lưng, trên đầu)", "Điều khiển bằng bàn phím hoặc joystick cảm ứng, bản đồ mini", "Mỗi ngày một đoạn văn, có phiên âm và mẹo nối âm", "Luyện nói với nhận diện giọng nói, chấm điểm", "Tích điểm kinh nghiệm, lên cấp, nhiệm vụ hằng ngày"],
+    tech: ["Three.js", "GLTF 3D", "Web Speech", "Game hóa", "Mobile"], demo: "du-an/hoc-tieng-anh/index.html" }
 ];

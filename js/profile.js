@@ -38,3 +38,24 @@ const SOCIAL = {
     "https://www.tiktok.com/@vandq96/video/7706851282635590920"   // PR 10km 49:40
   ]
 };
+
+/* Menu, chữ trên đầu trang và chân trang – sửa trong /admin */
+const SITE = {
+  initials: "VĐ",
+  brandSub: "Quản lý sản xuất · Kỷ luật · Học tập",
+  navCta: "Kết nối",
+  navCtaHref: "lien-he.html",
+  nav: [
+    { key: "home", href: "index.html", text: "Trang chủ" },
+    { key: "cv", href: "ho-so.html", text: "Hồ sơ" },
+    { key: "posts", href: "bai-viet.html", text: "Bài viết" },
+    { key: "projects", href: "du-an.html", text: "Dự án" },
+    { key: "video", href: "video.html", text: "Video" },
+    { key: "run", href: "chay-bo.html", text: "Chạy bộ" },
+    { key: "contact", href: "lien-he.html", text: "Liên hệ" }
+  ],
+  footPages: "Trang",
+  footConnect: "Kết nối",
+  tiktokLabel: "TikTok @vandq96",
+  copyright: "Hải Phòng"
+};

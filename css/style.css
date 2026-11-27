@@ -300,12 +300,15 @@ form.card{background:var(--paper);border:1px solid var(--line);border-radius:var
   .post-featured{grid-template-columns:1fr}
   .foot{grid-template-columns:1fr 1fr}
 }
-@media (max-width:760px){
-  .menu-toggle{display:block}
-  .nav-cta{display:none}
+@media (max-width:1140px){
+  .menu-toggle{display:block;order:3}
   .menu{position:absolute;top:70px;left:4%;right:4%;flex-direction:column;border-radius:18px;padding:8px;display:none;box-shadow:var(--shadow)}
   .menu.open{display:flex}
   .menu a{padding:12px 16px}
+  .nav{gap:12px}.nav-cta{margin-left:auto}
+}
+@media (max-width:760px){
+  .nav-cta{display:none}
   .posts,.now,.skills,.edu,.awards{grid-template-columns:1fr}
   .videos{grid-template-columns:repeat(2,minmax(0,1fr))}
   .ms{grid-template-columns:1fr;gap:4px}
@@ -385,3 +388,6 @@ img.brand-mark{object-fit:cover;background:#000;padding:0}
 .step p{margin:0;color:var(--muted);font-size:.93rem}
 @media (max-width:1020px){.pj{grid-template-columns:1fr}.pj:nth-child(even) .pj-shot{order:0}.pj-shot{aspect-ratio:16/10;min-height:0}.projects.compact{grid-template-columns:1fr 1fr}.steps{grid-template-columns:1fr 1fr}.pj-stats{grid-template-columns:1fr 1fr}}
 @media (max-width:760px){.projects.compact{grid-template-columns:1fr}.steps{grid-template-columns:1fr}.pj-top{flex-wrap:wrap}.pj-st{margin-left:0}}
+
+/* Khối bị ẩn trong /admin */
+[data-an]{display:none!important}

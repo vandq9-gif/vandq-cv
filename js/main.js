@@ -11,24 +11,26 @@
   const posts = (typeof POSTS !== "undefined" ? POSTS : []).map(p => ({ ...p, img: p.img || ((P.covers || {})[p.slug]) }));
   const videos = typeof VIDEOS !== "undefined" ? VIDEOS : [];
   const fmtDate = d => { const [y, m, dd] = d.split("-"); return `${dd}/${m}/${y}`; };
-  const initials = "VĐ";
+  const initials = (typeof SITE !== "undefined" && SITE.initials) || "VĐ";
   const zaloUrl = P.zalo ? "https://zalo.me/" + P.zalo : "";
   const fmtPhone = x => String(x).replace(/(\d{4})(\d{3})(\d{3})/, "$1 $2 $3");
 
   /* ---------- Header ---------- */
-  const NAV = [
-    ["home", "index.html", "Trang chủ"], ["cv", "ho-so.html", "Hồ sơ"], ["posts", "bai-viet.html", "Bài viết"],
-    ["projects", "du-an.html", "Dự án"], ["video", "video.html", "Video"], ["run", "chay-bo.html", "Chạy bộ"], ["contact", "lien-he.html", "Liên hệ"]
-  ];
+  const SI = typeof SITE !== "undefined" ? SITE : {};
+  const NAV = (SI.nav || [
+    { key: "home", href: "index.html", text: "Trang chủ" }, { key: "cv", href: "ho-so.html", text: "Hồ sơ" }, { key: "posts", href: "bai-viet.html", text: "Bài viết" },
+    { key: "projects", href: "du-an.html", text: "Dự án" }, { key: "video", href: "video.html", text: "Video" }, { key: "run", href: "chay-bo.html", text: "Chạy bộ" }, { key: "contact", href: "lien-he.html", text: "Liên hệ" }
+  ]).filter(n => !n.hide).map(n => [n.key, n.href, esc(n.text)]);
+  const absUrl = h => /^(https?:|mailto:|tel:|#)/.test(h) ? h : root + h;
   const activeKey = page === "post" ? "posts" : page;
   const header = $("#site-header");
   if (header) {
     header.className = "site-header";
     header.innerHTML = `<div class="container nav">
-      <a class="brand" href="${root}index.html">${P.logo ? `<img class="brand-mark" src="${root}${P.logo}" alt="VĐ" onerror="this.outerHTML='<span class=&quot;brand-mark&quot;>VĐ</span>'">` : '<span class="brand-mark">VĐ</span>'}<span>${esc(P.name || "Đinh Quý Văn")}<small>Quản lý sản xuất · Kỷ luật · Học tập</small></span></a>
+      <a class="brand" href="${root}index.html">${P.logo ? `<img class="brand-mark" src="${root}${P.logo}" alt="${initials}" onerror="this.outerHTML='<span class=&quot;brand-mark&quot;>${initials}</span>'">` : `<span class="brand-mark">${initials}</span>`}<span>${esc(P.name || "Đinh Quý Văn")}<small>${esc(SI.brandSub ?? "Quản lý sản xuất · Kỷ luật · Học tập")}</small></span></a>
       <button class="menu-toggle" type="button" aria-label="Mở menu" aria-expanded="false">☰</button>
-      <ul class="menu">${NAV.map(([k, h, t]) => `<li><a href="${root}${h}"${k === activeKey ? ' class="active" aria-current="page"' : ""}>${t}</a></li>`).join("")}</ul>
-      <a class="btn btn-dark btn-sm nav-cta" href="${root}lien-he.html">Kết nối</a>
+      <ul class="menu">${NAV.map(([k, h, t]) => `<li><a href="${absUrl(h)}"${k === activeKey ? ' class="active" aria-current="page"' : ""}>${t}</a></li>`).join("")}</ul>
+      ${SI.navCta === "" ? "" : `<a class="btn btn-dark btn-sm nav-cta" href="${absUrl(SI.navCtaHref || "lien-he.html")}">${esc(SI.navCta || "Kết nối")}</a>`}
     </div>`;
     const tg = $(".menu-toggle", header), menu = $(".menu", header);
     tg.addEventListener("click", () => { const o = menu.classList.toggle("open"); tg.setAttribute("aria-expanded", o); tg.textContent = o ? "✕" : "☰"; });
@@ -41,18 +43,18 @@
   if (footer) {
     footer.className = "site-footer";
     footer.innerHTML = `<div class="container foot">
-      <div><a class="brand" href="${root}index.html">${P.logo ? `<img class="brand-mark" src="${root}${P.logo}" alt="VĐ" onerror="this.outerHTML='<span class=&quot;brand-mark&quot;>VĐ</span>'">` : '<span class="brand-mark">VĐ</span>'}<span>${esc(P.name)}<small>${esc(P.title || "")}</small></span></a>
+      <div><a class="brand" href="${root}index.html">${P.logo ? `<img class="brand-mark" src="${root}${P.logo}" alt="${initials}" onerror="this.outerHTML='<span class=&quot;brand-mark&quot;>${initials}</span>'">` : `<span class="brand-mark">${initials}</span>`}<span>${esc(P.name)}<small>${esc(P.title || "")}</small></span></a>
         <p style="margin-top:14px">${esc(P.motto || "")}</p></div>
-      <div><h4>Trang</h4><ul>${NAV.map(([, h, t]) => `<li><a href="${root}${h}">${t}</a></li>`).join("")}</ul></div>
-      <div><h4>Kết nối</h4><ul>
+      <div><h4>${esc(SI.footPages || "Trang")}</h4><ul>${NAV.map(([, h, t]) => `<li><a href="${absUrl(h)}">${t}</a></li>`).join("")}</ul></div>
+      <div><h4>${esc(SI.footConnect || "Kết nối")}</h4><ul>
         ${P.phone ? `<li><a href="tel:${esc(P.phone)}">📞 ${esc(P.phone.replace(/(\d{4})(\d{3})(\d{3})/, "$1 $2 $3"))}</a></li>` : ""}
         ${zaloUrl ? `<li><a href="${zaloUrl}" target="_blank" rel="noopener">💬 Zalo ${fmtPhone(P.zalo)}</a></li>` : ""}
         ${P.email ? `<li><a href="mailto:${esc(P.email)}">✉️ ${esc(P.email)}</a></li>` : ""}
         ${S.facebookPage ? `<li><a href="${S.facebookPage}" target="_blank" rel="noopener">Facebook</a></li>` : ""}
-        ${S.tiktok ? `<li><a href="${S.tiktok}" target="_blank" rel="noopener">TikTok @vandq96</a></li>` : ""}
+        ${S.tiktok ? `<li><a href="${S.tiktok}" target="_blank" rel="noopener">${esc(SI.tiktokLabel || "TikTok @vandq96")}</a></li>` : ""}
         <li>📍 ${esc(P.area || "Hải Phòng")}</li></ul></div>
     </div>
-    <div class="container copy">© ${new Date().getFullYear()} ${esc(P.name)} · Hải Phòng</div>`;
+    <div class="container copy">© ${new Date().getFullYear()} ${esc(P.name)} · ${esc(SI.copyright ?? (P.area || "Hải Phòng"))}</div>`;
   }
 
   /* ---------- Thẻ bài viết ---------- */
