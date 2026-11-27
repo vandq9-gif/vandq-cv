@@ -391,3 +391,4 @@ img.brand-mark{object-fit:cover;background:#000;padding:0}
 
 /* Khối bị ẩn trong /admin */
 [data-an]{display:none!important}
+.pj-lock{margin-top:10px;font-size:.85rem;color:var(--muted)}

@@ -140,6 +140,15 @@
     $("#pj-stats").innerHTML = [[PJ.length, "ứng dụng tự xây"], [live, "đang dùng thực tế"], ["1 người", "tự thiết kế & vận hành"], ["100%", "bắt đầu từ việc thật"]].map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join("");
   }
   if (page === "home" && $("#home-projects")) $("#home-projects").innerHTML = PJ.slice(0, 3).map(x => pjCard(x, true)).join("");
+  /* Khóa mật khẩu bản demo (cấu hình trong /admin) */
+  if ($$(".pj").length) fetch(root + "du-an/pass.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(c => {
+    if (!c || !c.enabled) return;
+    $$(".pj").forEach(card => {
+      $$(".pj-play", card).forEach(e => e.textContent = "🔒 Dùng thử");
+      $$(".pj-act .btn-dark", card).forEach(e => e.textContent = "🔒 Dùng thử demo ↗");
+      if (c.cardNote && !$(".pj-lock", card)) { const n = document.createElement("p"); n.className = "pj-lock"; n.textContent = c.cardNote; const act = $(".pj-act", card); act && act.after(n); }
+    });
+  }).catch(() => {});
 
   /* ---------- Hồ sơ ---------- */
   if (page === "cv") {

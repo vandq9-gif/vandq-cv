@@ -1,0 +1,10 @@
+{
+  "enabled": false,
+  "title": "Bản dùng thử cần mật khẩu",
+  "message": "Các ứng dụng này dành cho nhà tuyển dụng và đối tác.\nVui lòng liên hệ để nhận mật khẩu dùng thử.",
+  "zalo": "0777001183",
+  "email": "vandq9@gmail.com",
+  "cardNote": "🔒 Cần mật khẩu – liên hệ Zalo 0777001183 để nhận.",
+  "salt": "3e6814f0d808cde64840b87167bfd6ef",
+  "list": []
+}

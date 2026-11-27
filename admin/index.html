@@ -111,6 +111,7 @@ code{background:#f1efeb;border-radius:5px;padding:1px 5px;font-size:12.5px}
     <button data-tab="pages">✏️ <span class="tx">Sửa trang (trực quan)</span></button>
     <button data-tab="posts">📝 <span class="tx">Bài viết</span></button>
     <button data-tab="projects">🧩 <span class="tx">Dự án</span></button>
+    <button data-tab="pass">🔒 <span class="tx">Mật khẩu dùng thử</span></button>
     <button data-tab="videos">🎬 <span class="tx">Video</span></button>
     <button data-tab="run">🏃 <span class="tx">Chạy bộ</span></button>
     <div class="grp">Thiết lập</div>
@@ -521,6 +522,82 @@ TABS.run = async m => {
   const c1 = h(`<div class="card"><h3>Con số nổi bật</h3></div>`); c1.appendChild(listEditor(d.RUN_STATS, null, { titleKey: "l" })); p.appendChild(c1);
   const c2 = h(`<div class="card"><h3>Cột mốc</h3></div>`); c2.appendChild(listEditor(d.RUN_MILESTONES, null, { titleKey: "title", make: () => ({ when: "", title: "Cột mốc mới", text: "", post: "" }) })); p.appendChild(c2);
   saveBar(p, "Lưu chạy bộ", () => { stageData("js/content.js", "Dự án, video, chạy bộ"); toast("Đã lưu vào danh sách chờ."); });
+};
+
+/* ---------- Mật khẩu dùng thử demo ---------- */
+const hexRand = n => [...crypto.getRandomValues(new Uint8Array(n))].map(x => x.toString(16).padStart(2, "0")).join("");
+const randPass = () => { const a = "abcdefghjkmnpqrstuvwxyz23456789"; let s = ""; crypto.getRandomValues(new Uint8Array(8)).forEach(x => s += a[x % a.length]); return s.slice(0, 4) + "-" + s.slice(4); };
+const sha256 = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map(x => x.toString(16).padStart(2, "0")).join("");
+const todayISO = (add = 0) => { const d = new Date(Date.now() + add * 864e5); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+Object.assign(LABEL, { enabled: "Bật khóa mật khẩu", cardNote: "Ghi chú dưới thẻ dự án", message: "Lời nhắn trên màn hình khóa" });
+TABS.pass = async m => {
+  let cfg;
+  try { cfg = JSON.parse(await readText("du-an/pass.json")); } catch (e) { cfg = { enabled: false, title: "Bản dùng thử cần mật khẩu", message: "Vui lòng liên hệ để nhận mật khẩu dùng thử.", zalo: "", email: "", cardNote: "", list: [] }; }
+  if (!cfg.salt) cfg.salt = hexRand(16);
+  if (!cfg.list) cfg.list = [];
+  const PJ = (await loadData("js/content.js")).PROJECTS;
+  const appName = id => (PJ.find(x => x.id === id) || {}).name || id;
+  const p = pane(m, "🔒 Mật khẩu dùng thử", "Ai có mật khẩu mới mở được các bản demo ở trang Dự án. Mỗi người/công ty nên có một mật khẩu riêng để anh khóa hoặc gia hạn từng người.");
+  const c1 = h(`<div class="card"><h3>Cài đặt chung</h3></div>`);
+  ["enabled", "title", "message", "zalo", "email", "cardNote"].forEach(k => { if (!(k in cfg)) cfg[k] = k === "enabled" ? false : ""; c1.appendChild(fieldFor(cfg, k, () => warn())); });
+  const wn = h(`<div></div>`); c1.appendChild(wn);
+  const warn = () => { const act = cfg.list.filter(e => e.on !== false && (!e.exp || e.exp >= todayISO())).length; wn.innerHTML = cfg.enabled && !act ? `<div class="note" style="margin-top:10px">Đang bật khóa nhưng <b>chưa có mật khẩu nào còn hiệu lực</b> – sẽ không ai vào được demo. Hãy tạo mật khẩu bên dưới.</div>` : !cfg.enabled ? `<div class="note" style="margin-top:10px">Khóa đang <b>tắt</b> – ai cũng dùng thử được. Tick “Bật khóa mật khẩu” rồi Lưu &amp; Xuất bản để bật.</div>` : ""; };
+  p.appendChild(c1);
+
+  const c3 = h(`<div class="card"><h3>＋ Tạo mật khẩu mới</h3>
+    <div class="field"><label>Cấp cho<small>tên người / công ty, để anh nhớ</small></label><div><input type="text" id="np-l" placeholder="Ví dụ: Anh Nam – Công ty ABC"></div></div>
+    <div class="field"><label>Mật khẩu</label><div class="row"><input type="text" id="np-p" style="flex:1;font-family:monospace"><button class="btn sm" id="np-r" title="Tạo ngẫu nhiên">🎲 Ngẫu nhiên</button></div></div>
+    <div class="field"><label>Hạn dùng<small>để trống = không hết hạn</small></label><div class="row"><input type="date" id="np-e" style="max-width:200px"><button class="btn sm" data-d="7">7 ngày</button><button class="btn sm" data-d="30">30 ngày</button><button class="btn sm" data-d="90">90 ngày</button><button class="btn sm" data-d="0">Không hạn</button></div></div>
+    <div class="field"><label>Được mở ứng dụng<small>không tick = tất cả</small></label><div class="row" id="np-a">${PJ.map(x => `<label class="chk" style="margin-right:12px"><input type="checkbox" value="${esc(x.id)}"> ${esc(x.icon)} ${esc(x.name)}</label>`).join("")}</div></div>
+    <button class="btn pri" id="np-go" style="margin-top:8px">Tạo mật khẩu</button></div>`);
+  p.appendChild(c3);
+  $("#np-p", c3).value = randPass(); $("#np-e", c3).value = todayISO(30);
+  $("#np-r", c3).onclick = () => $("#np-p", c3).value = randPass();
+  $$("[data-d]", c3).forEach(b => b.onclick = () => $("#np-e", c3).value = b.dataset.d === "0" ? "" : todayISO(+b.dataset.d));
+
+  const c2 = h(`<div class="card"><h3>Mật khẩu đã cấp</h3><div id="pl"></div></div>`); p.appendChild(c2);
+  const fmt = d => d ? d.split("-").reverse().join("/") : "không hạn";
+  const draw = () => {
+    const box = $("#pl", c2);
+    if (!cfg.list.length) { box.innerHTML = `<p class="hint">Chưa có mật khẩu nào.</p>`; warn(); return; }
+    box.innerHTML = "";
+    cfg.list.forEach((e, i) => {
+      const expired = e.exp && e.exp < todayISO();
+      const st = e.on === false ? `<b style="color:#b91c1c">Đã khóa</b>` : expired ? `<b style="color:#b45309">Hết hạn</b>` : `<b style="color:#047857">Đang dùng</b>`;
+      const el = h(`<div class="item"><div class="ih" style="cursor:default;flex-wrap:wrap"><span class="t">${esc(e.label || "(không tên)")}</span>
+        <span class="hint">${st} · hạn: ${fmt(e.exp)} · ${e.apps && e.apps.length ? e.apps.map(appName).map(esc).join(", ") : "tất cả ứng dụng"} · tạo ${fmt(e.created)}</span>
+        <button class="btn sm" data-t>${e.on === false ? "Mở lại" : "Khóa"}</button><button class="btn sm" data-x>Gia hạn</button><button class="btn sm bad" data-r>Xóa</button></div></div>`);
+      $("[data-t]", el).onclick = () => { e.on = e.on === false; draw(); };
+      $("[data-x]", el).onclick = () => { const v = prompt("Hạn mới (YYYY-MM-DD), để trống = không hạn:", todayISO(30)); if (v === null) return; if (v && !/^\d{4}-\d{2}-\d{2}$/.test(v.trim())) return toast("Ngày chưa đúng dạng 2026-12-31"); e.exp = v.trim(); draw(); };
+      $("[data-r]", el).onclick = () => { if (confirm("Xóa mật khẩu của “" + (e.label || "") + "”? Người này sẽ không vào được nữa.")) { cfg.list.splice(i, 1); draw(); } };
+      box.appendChild(el);
+    });
+    warn();
+  };
+  draw();
+  $("#np-go", c3).onclick = async () => {
+    const pw = $("#np-p", c3).value.trim(), label = $("#np-l", c3).value.trim();
+    if (pw.length < 6) return toast("Mật khẩu nên dài ít nhất 6 ký tự.");
+    const hash = await sha256(cfg.salt + ":" + pw);
+    if (cfg.list.some(e => e.hash === hash)) return toast("Mật khẩu này đã có, chọn mật khẩu khác.");
+    const apps = $$("#np-a input:checked", c3).map(x => x.value);
+    const exp = $("#np-e", c3).value;
+    cfg.list.unshift({ label, hash, apps, exp, on: true, created: todayISO() });
+    draw();
+    const msg = `Chào anh/chị,\nMời anh/chị dùng thử các ứng dụng tôi tự xây dựng tại: https://vandq.id.vn/du-an.html\nMật khẩu: ${pw}${exp ? `\n(Dùng được đến ${fmt(exp)})` : ""}\nMọi dữ liệu trong bản dùng thử đều là dữ liệu minh họa.\n– Đinh Quý Văn`;
+    const md = h(`<div class="modal"><div class="box"><h3>✅ Đã tạo mật khẩu</h3>
+      <p class="hint">Hãy sao chép ngay – vì lý do bảo mật, trang quản trị <b>không lưu lại</b> mật khẩu gốc, sau này chỉ khóa/gia hạn/xóa được.</p>
+      <div style="font:700 22px monospace;background:#f1efeb;border-radius:12px;padding:12px;text-align:center;margin:10px 0">${esc(pw)}</div>
+      <div class="lab hint">Tin nhắn gửi kèm (sửa tùy ý)</div><textarea rows="7">${esc(msg)}</textarea>
+      <div class="row" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-c>📋 Chép tin nhắn</button><button class="btn pri" data-x>Xong</button></div>
+      <p class="hint" style="margin-top:8px">Nhớ bấm <b>💾 Lưu</b> rồi <b>🚀 Xuất bản</b> thì mật khẩu mới có hiệu lực.</p></div></div>`);
+    document.body.appendChild(md);
+    $("[data-c]", md).onclick = () => { navigator.clipboard && navigator.clipboard.writeText($("textarea", md).value); toast("Đã chép tin nhắn."); };
+    $("[data-x]", md).onclick = () => md.remove();
+    $("#np-p", c3).value = randPass(); $("#np-l", c3).value = ""; $$("#np-a input", c3).forEach(x => x.checked = false);
+  };
+  p.appendChild(h(`<div class="hint" style="margin:4px 0 10px">Ghi chú: người đã mở khóa thành công sẽ được nhớ trên trình duyệt của họ; khi anh khóa, xóa hoặc mật khẩu hết hạn thì lần mở sau họ phải nhập lại. Mọi bản demo chỉ chứa dữ liệu ảo.</div>`));
+  saveBar(p, "Lưu mật khẩu", () => { stage("du-an/pass.json", { text: JSON.stringify(cfg, null, 2) + "\n" }, "Mật khẩu dùng thử"); toast("Đã lưu – bấm 🚀 Xuất bản để có hiệu lực."); });
 };
 
 /* ---------- Ảnh & tệp ---------- */
