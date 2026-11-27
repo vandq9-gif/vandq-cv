@@ -150,6 +150,10 @@ function uiDialog(msg, withInput, def) {
     if (!inp) setTimeout(() => $("[data-y]", m).focus(), 30);
   });
 }
+function copyText(t) {
+  const fb = () => { const x = document.createElement("textarea"); x.value = t; document.body.appendChild(x); x.select(); try { document.execCommand("copy"); } catch (e) {} x.remove(); };
+  try { navigator.clipboard ? navigator.clipboard.writeText(t).catch(fb) : fb(); } catch (e) { fb(); }
+}
 const uiConfirm = msg => uiDialog(msg, false);
 const uiPrompt = (msg, def) => uiDialog(msg, true, def);
 
@@ -606,7 +610,7 @@ TABS.pass = async m => {
       <div class="row" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-c>📋 Chép tin nhắn</button><button class="btn pri" data-x>Xong</button></div>
       <p class="hint" style="margin-top:8px">Nhớ bấm <b>💾 Lưu mật khẩu</b> rồi <b>🚀 Xuất bản</b> thì mới có hiệu lực.</p></div></div>`);
     document.body.appendChild(md);
-    $("[data-c]", md).onclick = () => { navigator.clipboard && navigator.clipboard.writeText($("textarea", md).value); toast("Đã chép tin nhắn."); };
+    $("[data-c]", md).onclick = () => { copyText($("textarea", md).value); toast("Đã chép tin nhắn."); };
     $("[data-x]", md).onclick = () => md.remove();
   };
   const editPass = e => {
@@ -669,12 +673,12 @@ TABS.media = async m => {
   const draw = q => { g.innerHTML = ""; list.filter(x => !q || x.toLowerCase().includes(q)).slice(0, 300).forEach(path => {
     const el = h(`<div class="g"><img loading="lazy" alt=""><div><a href="#" data-c>${esc(path)}</a><br>${PEND[path] && PEND[path].del ? "<b style='color:#b91c1c'>sẽ xóa</b>" : `<a href="#" data-d style="color:#b91c1c">xóa</a>`}</div></div>`);
     $("img", el).src = imgUrl(path);
-    $("[data-c]", el).onclick = e => { e.preventDefault(); navigator.clipboard && navigator.clipboard.writeText(path); toast("Đã chép: " + path); };
+    $("[data-c]", el).onclick = e => { e.preventDefault(); copyText(path); toast("Đã chép: " + path); };
     const dl = $("[data-d]", el); if (dl) dl.onclick = async e => { e.preventDefault(); if (await uiConfirm("Xóa ảnh " + path + "? Chỗ nào đang dùng ảnh này sẽ bị trống.")) { stage(path, { del: true }, "Xóa ảnh " + path.split("/").pop()); draw($("input", up).value.toLowerCase()); } };
     g.appendChild(el); }); };
   draw("");
   $("input", up).oninput = e => draw(e.target.value.toLowerCase());
-  $("button", up).onclick = async () => { const pth = await uploadImage(); if (pth) { list.unshift(pth); draw(""); navigator.clipboard && navigator.clipboard.writeText(pth); toast("Đã tải & chép đường dẫn: " + pth, 4000); } };
+  $("button", up).onclick = async () => { const pth = await uploadImage(); if (pth) { list.unshift(pth); draw(""); copyText(pth); toast("Đã tải & chép đường dẫn: " + pth, 4000); } };
 };
 
 /* ---------- Bài viết ---------- */
@@ -811,10 +815,11 @@ TABS.pages = async m => {
       <div class="edside" id="edside"></div></div></div>`);
   m.appendChild(ed);
   const sel = $("#pg", ed);
+  EDITOR.pages = pages;
   sel.innerHTML = pages.sort((a, b) => (a.startsWith("bai-viet/") - b.startsWith("bai-viet/")) || (Object.keys(PAGE_NAMES).indexOf(a) - Object.keys(PAGE_NAMES).indexOf(b))).map(x => `<option value="${esc(x)}">${esc(nameOf(x))}</option>`).join("");
   if (!pages.includes(PAGE_TO_OPEN)) PAGE_TO_OPEN = "index.html";
   sel.value = PAGE_TO_OPEN;
-  sel.onchange = async () => { if (EDITOR.dirty && !await uiConfirm("Trang này chưa Lưu thay đổi. Bỏ qua?")) { sel.value = EDITOR.path; return; } PAGE_TO_OPEN = sel.value; openPage(sel.value); };
+  sel.onchange = async () => { const v = sel.value; sel.value = EDITOR.path; await gotoPage(v); };
   $$("[data-w]", ed).forEach(b => b.onclick = () => $("#fr", ed).style.width = b.dataset.w);
   $("#pg-save", ed).onclick = savePage;
   wireToolbar(ed);
@@ -869,7 +874,11 @@ function setupFrame(fr) {
     if (e.target.closest("#__blk")) return;
     const img = e.target.closest("img");
     if (img && (img.hasAttribute("data-im") || img.closest("[data-rich]"))) { imagePanel(img); return; }
-    if (a) linkPanel(a); else renderSide();
+    if (a) {
+      const tg = pageFromHref(a.getAttribute("href"));
+      if (tg && !e.target.closest("[contenteditable]")) { e.stopPropagation(); gotoPage(tg); return; }
+      linkPanel(a);
+    } else renderSide();
   }, true);
   F.addEventListener("submit", e => e.preventDefault(), true);
   F.addEventListener("input", () => { EDITOR.dirty = true; });
@@ -981,7 +990,7 @@ function renderSide() {
   EDITOR.curLink = null;
   const side = $("#edside"), S = EDITOR.S; if (!side || !S) return;
   const desc = S.querySelector('meta[name="description"]');
-  side.innerHTML = `<h4>Cách sửa</h4><p class="hint">• Bấm vào chữ có viền xanh để sửa.<br>• Bấm vào ảnh để thay ảnh.<br>• Rê chuột lên một khối để đổi thứ tự, ẩn, nhân bản, thêm, xóa.<br>• Danh sách bài viết, video, dự án, tên, số điện thoại… sửa ở các mục bên trái.<br>• Xong bấm <b>💾 Lưu thay đổi</b> (hoặc Ctrl+S).</p>
+  side.innerHTML = `<h4>Cách sửa</h4><p class="hint">• Bấm vào chữ có viền xanh để sửa.<br>• Bấm vào ảnh để thay ảnh.<br>• Rê chuột lên một khối để đổi thứ tự, ẩn, nhân bản, thêm, xóa.<br>• Bấm vào menu hoặc nút dẫn tới trang khác để chuyển sang sửa trang đó.<br>• Danh sách bài viết, video, dự án, tên, số điện thoại… sửa ở các mục bên trái.<br>• Xong bấm <b>💾 Lưu thay đổi</b> (hoặc Ctrl+S).</p>
     <h4>Thông tin trang (Google, Facebook)</h4>
     <div class="lab">Tiêu đề trang</div><input type="text" id="ps-t">
     <div class="lab">Mô tả</div><textarea id="ps-d" rows="4"></textarea>
@@ -990,6 +999,19 @@ function renderSide() {
   $("#ps-t", side).oninput = e => { S.title = e.target.value; const o = S.querySelector('meta[property="og:title"]'); if (o) o.setAttribute("content", e.target.value); EDITOR.dirty = true; };
   $("#ps-d", side).oninput = e => { ["meta[name=\"description\"]", "meta[property=\"og:description\"]"].forEach(q => { const o = S.querySelector(q); if (o) o.setAttribute("content", e.target.value); }); EDITOR.dirty = true; };
 }
+function pageFromHref(href) {
+  if (!href || /^(https?:|mailto:|tel:|javascript:|#)/i.test(href)) return null;
+  let p = resolvePath(href.split("#")[0].split("?")[0], EDITOR.path.includes("/") ? EDITOR.path.replace(/[^/]+$/, "") : "");
+  if (!p || p.endsWith("/")) p += "index.html";
+  return (EDITOR.pages || []).includes(p) ? p : null;
+}
+async function gotoPage(p) {
+  if (p === EDITOR.path) return toast("Đang ở trang này rồi.");
+  if (EDITOR.dirty && !await uiConfirm("Trang này chưa “Lưu thay đổi”.\nLưu vào danh sách chờ rồi chuyển trang?")) return;
+  if (EDITOR.dirty) savePage();
+  const sel = $("#pg"); if (sel) sel.value = p;
+  PAGE_TO_OPEN = p; openPage(p);
+}
 function linkPanel(fa) {
   EDITOR.curLink = fa;
   const side = $("#edside"); const inHost = fa.closest("[data-ed]");
@@ -997,9 +1019,11 @@ function linkPanel(fa) {
     <div class="lab">Dẫn tới</div><input type="text" id="lk" placeholder="ví dụ: lien-he.html hoặc https://…">
     <label class="chk" style="margin-top:8px"><input type="checkbox" id="lk-n"> Mở trong tab mới</label>
     <div class="row" style="margin-top:10px"><button class="btn pri sm" id="lk-ok">Áp dụng</button><button class="btn sm" id="lk-x">Đóng</button></div>
+    ${pageFromHref(fa.getAttribute("href")) ? `<button class="btn sm" id="lk-go" style="margin-top:8px;width:100%">✏️ Mở trang này để sửa</button>` : ""}
     <p class="hint" style="margin-top:8px">Link trong trang dùng đường dẫn như <code>${esc(EDITOR.S.body.dataset.root || "")}ho-so.html</code>.</p>`;
   $("#lk", side).value = fa.getAttribute("href") || ""; $("#lk-n", side).checked = fa.target === "_blank";
   $("#lk-x", side).onclick = renderSide;
+  const go = $("#lk-go", side); if (go) go.onclick = () => gotoPage(pageFromHref(fa.getAttribute("href")));
   $("#lk-ok", side).onclick = () => {
     const v = $("#lk", side).value.trim(), nb = $("#lk-n", side).checked;
     const apply = a => { a.setAttribute("href", v); if (nb) { a.setAttribute("target", "_blank"); a.setAttribute("rel", "noopener"); } else { a.removeAttribute("target"); a.removeAttribute("rel"); } };
