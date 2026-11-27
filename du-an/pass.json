@@ -9,7 +9,6 @@
   "list": [
     {
       "label": "My friend",
-      "hash": "0ee1b865fa7767d1e68da1e855b0bbd4dff2d913559326dc4fd2f75b7dcc2e0a",
       "apps": [
         "hr-portal",
         "project-block",
@@ -20,7 +19,12 @@
       ],
       "exp": "",
       "on": true,
-      "created": "2026-11-27"
+      "created": "2026-11-27",
+      "h2": "a96268dd2f2e2c1f3804c2c75a1f4d5e40a102d6a39d91cca457d0c874562486",
+      "k": {
+        "iv": "kesgXhlqGsXTPKwk",
+        "ct": "jk5lclsKFdFMUq/3tSUOnoRujfJvgbIDnz5oA9aRuByNFZU0QgtxGccAvAVdvfXO"
+      }
     }
   ],
   "remember": "session",
