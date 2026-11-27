@@ -22,5 +22,10 @@
       "created": "2026-11-27"
     }
   ],
-  "remember": "session"
+  "remember": "session",
+  "docsKey": {
+    "salt": "28b489b5dbca9e3bb24a4285338eb293",
+    "iv": "pNViwNYbM6APwzAi",
+    "ct": "8t7UpIqVwz2wfF17sDymAV6lsXbSivbjgAsKD5YFm/6+OdDrHg/2FdLgeJkTgCAS"
+  }
 }
