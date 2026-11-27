@@ -540,6 +540,12 @@ TABS.pass = async m => {
   const p = pane(m, "🔒 Mật khẩu dùng thử", "Ai có mật khẩu mới mở được các bản demo ở trang Dự án. Mỗi người/công ty nên có một mật khẩu riêng để anh khóa hoặc gia hạn từng người.");
   const c1 = h(`<div class="card"><h3>Cài đặt chung</h3></div>`);
   ["enabled", "title", "message", "zalo", "email", "cardNote"].forEach(k => { if (!(k in cfg)) cfg[k] = k === "enabled" ? false : ""; c1.appendChild(fieldFor(cfg, k, () => warn())); });
+  if (!cfg.remember) cfg.remember = "never";
+  const rm = h(`<div class="field"><label>Ghi nhớ mật khẩu<small>sau khi nhập đúng</small></label><div><select>
+    <option value="never">Không nhớ – mỗi lần mở ứng dụng đều phải nhập</option>
+    <option value="session">Nhớ đến khi đóng tab/trình duyệt</option>
+    <option value="forever">Nhớ trên trình duyệt đó (đến khi anh khóa/xóa/hết hạn)</option></select></div></div>`);
+  $("select", rm).value = cfg.remember; $("select", rm).onchange = e => cfg.remember = e.target.value; c1.appendChild(rm);
   const wn = h(`<div></div>`); c1.appendChild(wn);
   const warn = () => { const act = cfg.list.filter(e => e.on !== false && (!e.exp || e.exp >= todayISO())).length; wn.innerHTML = cfg.enabled && !act ? `<div class="note" style="margin-top:10px">Đang bật khóa nhưng <b>chưa có mật khẩu nào còn hiệu lực</b> – sẽ không ai vào được demo. Hãy tạo mật khẩu bên dưới.</div>` : !cfg.enabled ? `<div class="note" style="margin-top:10px">Khóa đang <b>tắt</b> – ai cũng dùng thử được. Tick “Bật khóa mật khẩu” rồi Lưu &amp; Xuất bản để bật.</div>` : ""; };
   p.appendChild(c1);
@@ -596,7 +602,7 @@ TABS.pass = async m => {
     $("[data-x]", md).onclick = () => md.remove();
     $("#np-p", c3).value = randPass(); $("#np-l", c3).value = ""; $$("#np-a input", c3).forEach(x => x.checked = false);
   };
-  p.appendChild(h(`<div class="hint" style="margin:4px 0 10px">Ghi chú: người đã mở khóa thành công sẽ được nhớ trên trình duyệt của họ; khi anh khóa, xóa hoặc mật khẩu hết hạn thì lần mở sau họ phải nhập lại. Mọi bản demo chỉ chứa dữ liệu ảo.</div>`));
+  p.appendChild(h(`<div class="hint" style="margin:4px 0 10px">Ghi chú: mỗi lần mở ứng dụng, mật khẩu luôn được kiểm tra lại – anh khóa, xóa hoặc mật khẩu hết hạn là chặn ngay lần mở sau. Mọi bản demo chỉ chứa dữ liệu ảo.</div>`));
   saveBar(p, "Lưu mật khẩu", () => { stage("du-an/pass.json", { text: JSON.stringify(cfg, null, 2) + "\n" }, "Mật khẩu dùng thử"); toast("Đã lưu – bấm 🚀 Xuất bản để có hiệu lực."); });
 };
 

@@ -45,7 +45,7 @@
       sha((cfg.salt || "") + ":" + v).then(function (h) {
         b.disabled = false;
         var hit = (cfg.list || []).filter(function (x) { return x.hash === h; })[0];
-        if (ok(cfg, h)) { try { localStorage.setItem(KEY, JSON.stringify({ h: h, at: Date.now() })); } catch (e) {} open(); return; }
+        if (ok(cfg, h)) { try { var md = cfg.remember || "never"; if (md !== "never") (md === "session" ? sessionStorage : localStorage).setItem(KEY, JSON.stringify({ h: h, at: Date.now() })); } catch (e) {} open(); return; }
         er.textContent = !hit ? "Mật khẩu chưa đúng." : hit.on === false ? "Mật khẩu này đã bị khóa." : (hit.exp && today() > hit.exp) ? "Mật khẩu này đã hết hạn." : "Mật khẩu này không dùng cho ứng dụng này.";
         i.select();
       });
@@ -53,7 +53,11 @@
   }
   fetch("../pass.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (cfg) {
     if (!cfg || !cfg.enabled || !window.crypto || !crypto.subtle) return open();
-    var s = null; try { s = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) {}
+    var mode = cfg.remember || "never", s = null;
+    try {
+      if (mode === "never") { localStorage.removeItem(KEY); sessionStorage.removeItem(KEY); }
+      else s = JSON.parse((mode === "session" ? sessionStorage : localStorage).getItem(KEY) || "null");
+    } catch (e) {}
     if (s && s.h && ok(cfg, s.h)) return open();
     var go = function () { ask(cfg); };
     if (document.body) go(); else document.addEventListener("DOMContentLoaded", go);
