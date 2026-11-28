@@ -1,6 +1,19 @@
 /* Danh sách bài viết */
 const POSTS = [
  {
+  "slug": "9-nam-ca-12-tieng-va-ngay-toi-cam-bib-10km",
+  "title": "9 năm ca 12 tiếng – và ngày tôi cầm trên tay tấm BIB 10km",
+  "date": "2026-11-28",
+  "desc": "9 năm làm việc ca 12 tiếng trong nhà máy, chưa bao giờ tôi nghĩ mình sẽ cầm BIB chạy 10km. Mọi thứ bắt đầu từ 400m – không người hướng dẫn, không người đồng hành, chỉ có một nguyên tắc: không dừng lại.",
+  "short": "Từ 400m chạy một mình, không ai hướng dẫn, đến tấm BIB M10166 cự ly 10km tại DeepC Run Royale. Câu chuyện của một người làm ca 12 tiếng suốt 9 năm.",
+  "cat": "Sức khỏe & kỷ luật",
+  "emoji": "🏅",
+  "color": "#0a9d6c",
+  "key": "suc-khoe",
+  "img": "images/posts/deepc-run/bib-10km.jpg",
+  "read": 4
+ },
+ {
   "slug": "ung-dung-ai-vao-cong-viec-thuc-te",
   "title": "Tôi đã ứng dụng AI vào công việc như thế nào? Câu chuyện của một người không biết code",
   "date": "2026-11-24",
